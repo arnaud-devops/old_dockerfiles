@@ -1,7 +1,7 @@
 FROM alpine:3.6
 LABEL maintainer "Arnaud Astruc <oxynux@gmail.com>"
 
-ENV NGINX_VERSION 1.13.1
+ENV NGINX_VERSION 1.13.2
 ENV LIBRESSL_VERSION 2.5.4
 ENV DYNAMIC_TLS_RECORDS "1.13.0+"
 
