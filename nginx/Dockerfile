@@ -1,7 +1,7 @@
 FROM alpine:3.6
 LABEL maintainer "Arnaud Astruc <oxynux@gmail.com>"
 
-ENV NGINX_VERSION 1.13.3
+ENV NGINX_VERSION 1.13.5
 ENV LIBRESSL_VERSION 2.5.5
 ENV DYNAMIC_TLS_RECORDS "1.13.0+"
 
@@ -22,7 +22,7 @@ RUN mkfifo -m 600 /tmp/logpipe \
 ARG NGINX_CC_FLAGS="-O2 -DTCP_FASTOPEN=23"
 
 ARG NGINX_CONFIG=" \
-        --prefix=/etc/nginx \
+		--prefix=/etc/nginx \
 		--sbin-path=/usr/sbin/nginx \
 		--conf-path=/etc/nginx/nginx.conf \
 		--error-log-path=/tmp/logpipe \
@@ -59,94 +59,94 @@ ARG NGINX_CONFIG=" \
 		--with-compat \
 		--with-file-aio \
 		--with-http_v2_module \
-        --with-pcre-jit \
+		--with-pcre-jit \
 		--with-openssl=/usr/src/libressl-$LIBRESSL_VERSION \
 		--add-module=/usr/src/ngx_headers_more \
 		--add-module=/usr/src/ngx_brotli"
 
 RUN apk add --no-cache --virtual .build-deps \
-        gcc \
-		musl-dev \
-		make \
-		openssl-dev \
-		pcre-dev \
-		zlib-dev \
-		linux-headers \
-		curl \
-		gnupg \
-		libxslt-dev \
-		gd-dev \
-		geoip-dev \
-        git \
-        autoconf \
-        automake \
-        libtool \
-		file \
-		patch \
-    && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
-	&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc -o nginx.tar.gz.asc \
-	&& found=''; \
-       gpg --no-tty --keyserver ha.pool.sks-keyservers.net --recv-keys $NGINX_FINGERPRINT && found=yes && break; \
-	   test -z "$found" && echo >&2 "error: failed to fetch GPG key $NGINX_FINGERPRINT" && exit 1; \
-       gpg --verify nginx.tar.gz.asc \
-    && curl -fSL http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$LIBRESSL_VERSION.tar.gz -o libressl.tar.gz \
-	&& curl -fSL http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$LIBRESSL_VERSION.tar.gz.asc -o libressl.tar.gz.asc \
-	&& found=''; \
-       gpg --no-tty --keyserver ha.pool.sks-keyservers.net --recv-keys $LIBRESSL_FINGERPRINT && found=yes && break; \
-	   test -z "$found" && echo >&2 "error: failed to fetch GPG key $LIBRESSL_FINGERPRINT" && exit 1; \
-       gpg --verify libressl.tar.gz.asc \
-    && git clone --depth 1 https://github.com/bagder/libbrotli /usr/src/libbrotli \
-    && ( \
-		    cd /usr/src/libbrotli \
-		    && ./autogen.sh \
-		    && ./configure \
-            && make -j$(getconf _NPROCESSORS_ONLN) \
-            && make install \
-	) \
-    && git clone --depth=1 --recurse-submodules https://github.com/google/ngx_brotli /usr/src/ngx_brotli \
-    && git clone --depth=1 https://github.com/openresty/headers-more-nginx-module /usr/src/ngx_headers_more \
-	&& tar -zxC /usr/src -f nginx.tar.gz \
-	&& rm nginx.tar.gz \
-	&& tar -zxC /usr/src -f libressl.tar.gz \
-	&& rm libressl.tar.gz \
-	&& cd /usr/src/nginx-$NGINX_VERSION \
-	&& curl -fSL https://raw.githubusercontent.com/cujanovic/nginx-dynamic-tls-records-patch/master/nginx__dynamic_tls_records_$DYNAMIC_TLS_RECORDS.patch -o nginx__dynamic_tls_records.patch \
-	&& patch -p1 < nginx__dynamic_tls_records.patch \
-	&& ./configure ${NGINX_CONFIG} \
-		--with-cc-opt="${NGINX_CC_FLAGS}" \
-	&& make -j$(getconf _NPROCESSORS_ONLN) \
-	&& make install \
-	&& rm -rf /etc/nginx/html/ \
-	&& mkdir /etc/nginx/conf.d/ \
-	&& mkdir -p /usr/share/nginx/html/ \
-	&& install -m644 html/index.html /usr/share/nginx/html/ \
-	&& install -m644 html/50x.html /usr/share/nginx/html/ \
-	&& strip /usr/sbin/nginx* \
-	\
-	# Bring in gettext so we can get `envsubst`, then throw
-	# the rest away. To do this, we need to install `gettext`
-	# then move `envsubst` out of the way so `gettext` can
-	# be deleted completely, then move `envsubst` back.
-	&& apk add --no-cache --virtual .gettext gettext \
-	&& mv /usr/bin/envsubst /tmp/ \
-	&& runDeps="$( \
-		scanelf --needed --nobanner /usr/sbin/nginx /tmp/envsubst \
+			gcc \
+			musl-dev \
+			make \
+			openssl-dev \
+			pcre-dev \
+			zlib-dev \
+			linux-headers \
+			curl \
+			gnupg \
+			libxslt-dev \
+			gd-dev \
+			geoip-dev \
+      		  	git \
+        		autoconf \
+       		 	automake \
+       		 	libtool \
+			file \
+			patch \
+		&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
+		&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc -o nginx.tar.gz.asc \
+		&& found=''; \
+			gpg --no-tty --keyserver ha.pool.sks-keyservers.net --recv-keys $NGINX_FINGERPRINT && found=yes && break; \
+			test -z "$found" && echo >&2 "error: failed to fetch GPG key $NGINX_FINGERPRINT" && exit 1; \
+			gpg --verify nginx.tar.gz.asc \
+		&& curl -fSL http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$LIBRESSL_VERSION.tar.gz -o libressl.tar.gz \
+		&& curl -fSL http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$LIBRESSL_VERSION.tar.gz.asc -o libressl.tar.gz.asc \
+		&& found=''; \
+			gpg --no-tty --keyserver ha.pool.sks-keyservers.net --recv-keys $LIBRESSL_FINGERPRINT && found=yes && break; \
+			test -z "$found" && echo >&2 "error: failed to fetch GPG key $LIBRESSL_FINGERPRINT" && exit 1; \
+			gpg --verify libressl.tar.gz.asc \
+		&& git clone --depth 1 https://github.com/bagder/libbrotli /usr/src/libbrotli \
+		&& ( \
+			cd /usr/src/libbrotli \
+			&& ./autogen.sh \
+			&& ./configure \
+			&& make -j$(getconf _NPROCESSORS_ONLN) \
+			&& make install \
+		) \
+		&& git clone --depth=1 --recurse-submodules https://github.com/google/ngx_brotli /usr/src/ngx_brotli \
+		&& git clone --depth=1 https://github.com/openresty/headers-more-nginx-module /usr/src/ngx_headers_more \
+		&& tar -zxC /usr/src -f nginx.tar.gz \
+		&& rm nginx.tar.gz \
+		&& tar -zxC /usr/src -f libressl.tar.gz \
+		&& rm libressl.tar.gz \
+		&& cd /usr/src/nginx-$NGINX_VERSION \
+		&& curl -fSL https://raw.githubusercontent.com/cujanovic/nginx-dynamic-tls-records-patch/master/nginx__dynamic_tls_records_$DYNAMIC_TLS_RECORDS.patch -o nginx__dynamic_tls_records.patch \
+		&& patch -p1 < nginx__dynamic_tls_records.patch \
+		&& ./configure ${NGINX_CONFIG} \
+			--with-cc-opt="${NGINX_CC_FLAGS}" \
+		&& make -j$(getconf _NPROCESSORS_ONLN) \
+		&& make install \
+		&& rm -rf /etc/nginx/html/ \
+		&& mkdir /etc/nginx/conf.d/ \
+		&& mkdir -p /usr/share/nginx/html/ \
+		&& install -m644 html/index.html /usr/share/nginx/html/ \
+		&& install -m644 html/50x.html /usr/share/nginx/html/ \
+		&& strip /usr/sbin/nginx* \
+		\
+		# Bring in gettext so we can get `envsubst`, then throw
+		# the rest away. To do this, we need to install `gettext`
+		# then move `envsubst` out of the way so `gettext` can
+		# be deleted completely, then move `envsubst` back.
+		&& apk add --no-cache --virtual .gettext gettext \
+		&& mv /usr/bin/envsubst /tmp/ \
+		&& runDeps="$( \
+			scanelf --needed --nobanner /usr/sbin/nginx /tmp/envsubst \
 			| awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
 			| sort -u \
 			| xargs -r apk info --installed \
 			| sort -u \
-	) tzdata ca-certificates" \
-	&& apk add --no-cache --virtual .nginx-rundeps $runDeps \
-	&& apk del .build-deps \
-	&& apk del .gettext \
-	&& mv /tmp/envsubst /usr/local/bin/ \
-	&& rm -rf \
-		/tmp/* \
-		/var/cache/apk/* \
-		/root/.gnupg \
-		/usr/src \
-		/libressl.tar.gz.asc \
-		/lnginx.tar.gz.asc
+		) tzdata ca-certificates" \
+		&& apk add --no-cache --virtual .nginx-rundeps $runDeps \
+		&& apk del .build-deps \
+		&& apk del .gettext \
+		&& mv /tmp/envsubst /usr/local/bin/ \
+		&& rm -rf \
+			/tmp/* \
+			/var/cache/apk/* \
+			/root/.gnupg \
+			/usr/src \
+			/libressl.tar.gz.asc \
+			/lnginx.tar.gz.asc
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY default.conf /etc/nginx/conf.d/default.conf
@@ -157,8 +157,8 @@ COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 LABEL description="nginx mainline built from source with ngx_headers_more, ngx_brotli and TCP Fast Open" \
-      openssl="LibreSSL $LIBRESSL_VERSION" \
-      nginx="nginx $NGINX_VERSION"
+	  	openssl="LibreSSL $LIBRESSL_VERSION" \
+	 	 nginx="nginx $NGINX_VERSION"
 
 EXPOSE 8080 4430
 CMD ["nginx", "-g", "daemon off;"]
