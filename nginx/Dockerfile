@@ -146,7 +146,7 @@ RUN apk add --no-cache --virtual .build-deps \
 			/root/.gnupg \
 			/usr/src \
 			/libressl.tar.gz.asc \
-			/lnginx.tar.gz.asc
+			/nginx.tar.gz.asc
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY default.conf /etc/nginx/conf.d/default.conf
