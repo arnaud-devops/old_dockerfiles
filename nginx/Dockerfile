@@ -86,13 +86,19 @@ RUN apk add --no-cache --virtual .build-deps \
 		&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
 		&& curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc -o nginx.tar.gz.asc \
 		&& found=''; \
-			gpg --no-tty --keyserver ha.pool.sks-keyservers.net --recv-keys $NGINX_FINGERPRINT && found=yes && break; \
+			gpg --no-tty --keyserver pgp.mit.edu --recv-keys $NGINX_FINGERPRINT || \
+			gpg --no-tty --keyserver keyserver.pgp.com --recv-keys $NGINX_FINGERPRINT || \
+			gpg --no-tty --keyserver ha.pool.sks-keyservers.net --recv-keys $NGINX_FINGERPRINT ; \
+			&& found=yes && break; \
 			test -z "$found" && echo >&2 "error: failed to fetch GPG key $NGINX_FINGERPRINT" && exit 1; \
 			gpg --verify nginx.tar.gz.asc \
 		&& curl -fSL http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$LIBRESSL_VERSION.tar.gz -o libressl.tar.gz \
 		&& curl -fSL http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$LIBRESSL_VERSION.tar.gz.asc -o libressl.tar.gz.asc \
 		&& found=''; \
-			gpg --no-tty --keyserver ha.pool.sks-keyservers.net --recv-keys $LIBRESSL_FINGERPRINT && found=yes && break; \
+			gpg --no-tty --keyserver pgp.mit.edu --recv-keys $LIBRESSL_FINGERPRINT || \
+			gpg --no-tty --keyserver keyserver.pgp.com --recv-keys $LIBRESSL_FINGERPRINT || \
+			gpg --no-tty --keyserver ha.pool.sks-keyservers.net --recv-keys $LIBRESSL_FINGERPRINT ; \
+			&& found=yes && break; \
 			test -z "$found" && echo >&2 "error: failed to fetch GPG key $LIBRESSL_FINGERPRINT" && exit 1; \
 			gpg --verify libressl.tar.gz.asc \
 		&& git clone --depth 1 https://github.com/bagder/libbrotli /usr/src/libbrotli \
