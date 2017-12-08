@@ -1,7 +1,7 @@
-FROM alpine:3.6
+FROM alpine:3.7
 LABEL maintainer "Arnaud Astruc <oxynux@gmail.com>"
 
-ENV NGINX_VERSION 1.13.6
+ENV NGINX_VERSION 1.13.7
 ENV LIBRESSL_VERSION 2.6.3
 ENV DYNAMIC_TLS_RECORDS "1.13.0+"
 
@@ -154,7 +154,7 @@ RUN apk add --no-cache --virtual .build-deps \
 		/tmp/* \
 		/var/cache/apk/* \
 		/root/.gnupg \
-		/usr/src \
+		/usr/src/* \
 		/libressl.tar.gz.asc \
 		/nginx.tar.gz.asc
 
