@@ -2,8 +2,9 @@ FROM alpine:3.7
 LABEL maintainer "Arnaud Astruc <oxynux@gmail.com>"
 
 ENV NGINX_VERSION 1.13.7
-ENV LIBRESSL_VERSION 2.6.3
-ENV DYNAMIC_TLS_RECORDS "1.13.0+"
+ENV LIBRESSL_VERSION 2.6.4
+ENV DYNAMIC_TLS_RECORDS_VERSION "1.13.0+"
+ENV HEADERS_MORE_MODULE_VERSION "0.33"
 
 ENV NGINX_FINGERPRINT "B0F4253373F8F6F510D42178520A9993A1C052F8"
 ENV LIBRESSL_FINGERPRINT "A1EB079B8D3EB92B4EBD3139663AF51BD5E4D8D5"
@@ -61,8 +62,7 @@ ARG NGINX_CONFIG=" \
 		--with-http_v2_module \
 		--with-pcre-jit \
 		--with-openssl=/usr/src/libressl-$LIBRESSL_VERSION \
-		--add-module=/usr/src/ngx_headers_more \
-		--add-module=/usr/src/ngx_brotli"
+		--add-module=/usr/src/headers-more-nginx-module-$HEADERS_MORE_MODULE_VERSION"
 
 RUN apk add --no-cache --virtual .build-deps \
 		gcc \
@@ -105,23 +105,19 @@ RUN apk add --no-cache --virtual .build-deps \
 		&& found=yes && break; \
 		test -z "$found" && echo >&2 "error: failed to fetch GPG key $LIBRESSL_FINGERPRINT" && exit 1; \
 		gpg --verify libressl.tar.gz.asc \
-		&& git clone --depth 1 https://github.com/bagder/libbrotli /usr/src/libbrotli \
-		&& ( \
-		cd /usr/src/libbrotli \
-		&& ./autogen.sh \
-		&& ./configure \
-		&& make -j$(getconf _NPROCESSORS_ONLN) \
-		&& make install \
-		) \
-		&& git clone --depth=1 --recurse-submodules https://github.com/google/ngx_brotli /usr/src/ngx_brotli \
-		&& git clone --depth=1 https://github.com/openresty/headers-more-nginx-module /usr/src/ngx_headers_more \
+		&& mkdir -p /usr/src \
+		&& curl -fSL https://github.com/openresty/headers-more-nginx-module/archive/v$HEADERS_MORE_MODULE_VERSION.tar.gz -o ngx_headers_more.tar.gz \
+		&& tar -zxC /usr/src -f ngx_headers_more.tar.gz \
+		&& ls -laR /usr/src \
+		&& rm ngx_headers_more.tar.gz \
 		&& tar -zxC /usr/src -f nginx.tar.gz \
 		&& rm nginx.tar.gz \
 		&& tar -zxC /usr/src -f libressl.tar.gz \
 		&& rm libressl.tar.gz \
 		&& cd /usr/src/nginx-$NGINX_VERSION \
-		&& curl -fSL https://raw.githubusercontent.com/cujanovic/nginx-dynamic-tls-records-patch/master/nginx__dynamic_tls_records_$DYNAMIC_TLS_RECORDS.patch -o nginx__dynamic_tls_records.patch \
+		&& curl -fSL https://raw.githubusercontent.com/cujanovic/nginx-dynamic-tls-records-patch/master/nginx__dynamic_tls_records_$DYNAMIC_TLS_RECORDS_VERSION.patch -o nginx__dynamic_tls_records.patch \
 		&& patch -p1 < nginx__dynamic_tls_records.patch \
+		&& rm nginx__dynamic_tls_records.patch \
 		&& ./configure ${NGINX_CONFIG} \
 		--with-cc-opt="${NGINX_CC_FLAGS}" \
 		&& make -j$(getconf _NPROCESSORS_ONLN) \
@@ -132,11 +128,6 @@ RUN apk add --no-cache --virtual .build-deps \
 		&& install -m644 html/index.html /usr/share/nginx/html/ \
 		&& install -m644 html/50x.html /usr/share/nginx/html/ \
 		&& strip /usr/sbin/nginx* \
-		\
-		# Bring in gettext so we can get `envsubst`, then throw
-		# the rest away. To do this, we need to install `gettext`
-		# then move `envsubst` out of the way so `gettext` can
-		# be deleted completely, then move `envsubst` back.
 		&& apk add --no-cache --virtual .gettext gettext \
 		&& mv /usr/bin/envsubst /tmp/ \
 		&& runDeps="$( \
@@ -150,11 +141,10 @@ RUN apk add --no-cache --virtual .build-deps \
 		&& apk del .build-deps \
 		&& apk del .gettext \
 		&& mv /tmp/envsubst /usr/local/bin/ \
+		&& chown -R nginx:nginx /etc/nginx \
 		&& rm -rf \
-		/tmp/* \
-		/var/cache/apk/* \
 		/root/.gnupg \
-		/usr/src/* \
+		/usr/src \
 		/libressl.tar.gz.asc \
 		/nginx.tar.gz.asc
 
